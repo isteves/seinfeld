@@ -1,25 +1,15 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
 library(shiny)
 library(tidyverse)
 
 seinfeld <- read.csv("scripts.csv")
 
-
-# Define UI for application that draws a histogram
+# Define UI 
 ui <- fluidPage(
   
   # Application title
   titlePanel("Seinfeld"),
   
-  # Sidebar with a slider input for number of bins 
+  # Sidebar with a checkbox input for character
   sidebarLayout(
     mainPanel(
       plotOutput("distPlot")),
@@ -33,21 +23,16 @@ ui <- fluidPage(
                                   "Kramer" = "KRAMER"), 
                    selected = "KRAMER")
       
-      
-      # Show a plot of the generated distribution
     )
   )
 )
 
-# Define server logic required to draw a histogram
+# Define server logic required to draw a plot
 server <- function(input, output) {
    
    output$distPlot <- renderPlot({
-      # generate bins based on input$bins from ui.R
-      # x    <- faithful[, 2] 
-      # output$value <- renderPrint({ input$radio })
-      
-      # PLOT HERE
+
+     # filter & plot
      seinfeld %>% 
        as_tibble() %>% 
        group_by(Season, Character, EpisodeNo) %>% 
