@@ -1,0 +1,116 @@
+# Sentiment with Bing
+
+```{r message = FALSE, warning = FALSE}
+library(tidyverse)
+library(tidytext)
+library(plotly)
+library(wordcloud)
+
+seinfeld <- read.csv("scripts.csv", stringsAsFactors = FALSE)
+
+sentiments <- get_sentiments("bing")
+
+text_words <- seinfeld %>% 
+    as_tibble() %>% 
+    tidytext::unnest_tokens(output = word, input = Dialogue, token = "words") %>% 
+    inner_join(sentiments, by = "word") 
+
+seinfeld_plot <- text_words %>% 
+    group_by(Season) %>% 
+    count(sentiment, EpisodeNo) %>% 
+    # filter(Character %in% c("ELAINE", "GEORGE", "JERRY", "KRAMER")) %>% 
+    spread(sentiment, n) %>% 
+    na.omit() %>% 
+    mutate(raw_score = positive - negative,
+           positivity = positive/(positive + negative),
+           offset_positivity = positivity - .5,
+           offset = mean(positive - negative),
+           offset_score = raw_score - offset) %>% 
+    # mutate(Character = reorder(Character, offset_score)) %>%
+    ggplot(aes(x = EpisodeNo, y = offset_positivity)) +
+    geom_col() +
+    facet_grid(.~ Season)
+
+ggplotly(seinfeld_plot)
+```
+
+# Sentiments with AFINN
+
+```{r}
+sentiments <- get_sentiments("afinn")
+
+text_words <- seinfeld %>% 
+    as_tibble() %>% 
+    tidytext::unnest_tokens(output = word, input = Dialogue, token = "words") %>% 
+    inner_join(sentiments, by = "word") 
+
+seinfeld_plot <- text_words %>% 
+    group_by(Season, EpisodeNo) %>% 
+    summarize(sum_score = sum(score)) %>% 
+    ggplot(aes(x = EpisodeNo, y = sum_score)) +
+    geom_col() +
+    facet_grid(.~ Season)
+
+ggplotly(seinfeld_plot)
+```
+
+# Word clouds
+
+```{r}
+text_words <- seinfeld %>% 
+    as_tibble() %>% 
+    tidytext::unnest_tokens(output = word, input = Dialogue, token = "words") %>% 
+    filter(!word %in% c("yeah", "no", "like", "good", "want", "yes")) %>%
+    filter(!word %in% c("hey", "jerry", "george", "elaine", "kramer", "uh", "gonna")) %>%
+    anti_join(stop_words)
+```
+
+## Jerry
+
+```{r}
+text_words %>% 
+    filter(Character == "JERRY") %>% 
+    # anti_join(stop_words) %>% 
+    count(word) %>%
+    with(wordcloud(word, n, max.words = 100))
+```
+
+## George
+
+```{r}
+text_words %>% 
+    filter(Character == "GEORGE") %>% 
+    # anti_join(stop_words) %>% 
+    count(word) %>%
+    with(wordcloud(word, n, max.words = 100))
+```
+
+## Elaine
+
+```{r}
+text_words %>% 
+    filter(Character == "ELAINE") %>% 
+    # anti_join(stop_words) %>% 
+    count(word) %>%
+    with(wordcloud(word, n, max.words = 100))
+```
+
+## Kramer
+
+```{r}
+text_words %>% 
+    filter(Character == "KRAMER") %>% 
+    # anti_join(stop_words) %>% 
+    count(word) %>%
+    with(wordcloud(word, n, max.words = 100))
+```
+
+## Newman
+
+```{r}
+text_words %>% 
+    filter(Character == "NEWMAN") %>% 
+    # anti_join(stop_words) %>% 
+    count(word) %>%
+    with(wordcloud(word, n, max.words = 100))
+```
